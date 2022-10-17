@@ -172,3 +172,19 @@ jobs:
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-keycloak-operator-hub:
+    name: Publish Keycloak Operator to OperatorHub
+    needs: [ env, create-tags, keycloak-operator ]
+    uses: ./.github/workflows/x-keycloak-operator-hub-publish.yml
+    with:
+      gh-org: ${{ needs.env.outputs.gh-org }}
+      quay-org: ${{ needs.env.outputs.quay-org }}
+      mvn-url: ${{ needs.env.outputs.mvn-releases-url }}
+      version: ${{ github.event.inputs.version }}
+      community-operators-repo: ${{ needs.env.outputs.community-operators-repo }}
+      prod-operators-repo: ${{ needs.env.outputs.prod-operators-repo }}
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      MVN_USERNAME: ${{ secrets.MVN_USERNAME }}
+      MVN_TOKEN: ${{ secrets.MVN_TOKEN }}

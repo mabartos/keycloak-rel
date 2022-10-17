@@ -1,0 +1,145 @@
+name: X Keycloak Operator Hub publish
+
+on:
+  workflow_call:
+    inputs:
+      gh-org:
+        required: true
+        type: string
+      quay-org:
+        required: true
+        type: string
+      community-operators-repo:
+        required: true
+        type: string
+      prod-operators-repo:
+        required: true
+        type: string
+      mvn-url:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+    secrets:
+      GH_TOKEN:
+        required: true
+      MVN_USERNAME:
+        required: true
+      MVN_TOKEN:
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Java
+        uses: actions/setup-java@v3.0.0
+        with:
+          distribution: 'temurin'
+          java-version: 11
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3.0.0
+        with:
+          repository: '${{ inputs.gh-org }}/keycloak'
+          token: ${{ secrets.GH_TOKEN }}
+          ref: ${{ inputs.version }}
+          path: keycloak
+
+      - name: Build
+        env:
+          MAVEN_ID: kc-rel-repository
+          MAVEN_URL: ${{ inputs.mvn-url }}
+          MAVEN_USERNAME: ${{ secrets.MVN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MVN_TOKEN }}
+        working-directory: keycloak
+        run: |
+          ./mvnw clean package \
+              -s ./.github/mvn-rel-settings.xml \
+              -f operator/pom.xml \
+              -DskipTests
+
+      - name: Install Yq
+        working-directory: keycloak
+        run: sudo snap install yq
+
+      - name: Fetch previous version of Keycloak
+        working-directory: keycloak
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          echo "previous_version=$(gh release view -R keycloak/keycloak --json tagName --jq '.tagName')" >> $GITHUB_ENV
+
+      - name: Dump previous version of Keycloak
+        working-directory: keycloak
+        run: |
+          echo "Previous version of Keycloak is: ${{ env.previous_version }} " >> $GITHUB_STEP_SUMMARY
+
+      - name: Create OLM Bundle
+        working-directory: keycloak
+        run: |
+          cd operator && ./scripts/create-olm-bundle.sh ${{ inputs.version }} ${{ env.previous_version }} quay.io/${{ inputs.quay-org }}/keycloak-operator
+          echo "olm_bundle_dir=$(pwd)/olm/${{ inputs.version }}" >> $GITHUB_ENV
+
+      - name: Clone community-operators
+        uses: actions/checkout@v3
+        with:
+          repository: keycloak-bot/community-operators
+          path: community-operators
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Automatic Community PR opening
+        working-directory: community-operators
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git remote add upstream ${{ inputs.community-operators-repo }}
+          git fetch upstream
+          
+          git checkout upstream/main -B releases/${{ inputs.version }}
+          
+          mkdir -p operators/keycloak-operator/${{ inputs.version }}
+          cp -r ${{ env.olm_bundle_dir }}/* operators/keycloak-operator/${{ inputs.version }}/
+          
+          git config --global user.email "keycloak.bot@gmail.com"
+          git config --global user.name "keycloak-bot"
+          
+          git add .
+          git commit -s -m "Bump Keycloak operator to ${{ inputs.version }}"
+          
+          git push origin HEAD --force
+          
+          gh pr create --title "Bump Keycloak operator to ${{ inputs.version }}" --fill --repo ${{ inputs.community-operators-repo }}
+
+      - name: Clone community-operators-prod
+        uses: actions/checkout@v3
+        with:
+          repository: keycloak-bot/community-operators-prod
+          path: community-operators-prod
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Automatic Prod PR opening
+        working-directory: community-operators-prod
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git remote add upstream ${{ inputs.prod-operators-repo }}
+          git fetch upstream
+          
+          git checkout upstream/main -B releases/${{ inputs.version }}
+          
+          mkdir -p operators/keycloak-operator/${{ inputs.version }}
+          cp -r ${{ env.olm_bundle_dir }}/* operators/keycloak-operator/${{ inputs.version }}/
+          
+          git add .
+          git commit -s -m "Bump Keycloak operator to ${{ inputs.version }}"
+          
+          git push origin HEAD --force
+          
+          gh pr create --title "Bump Keycloak operator to ${{ inputs.version }}" --fill --repo ${{ inputs.prod-operators-repo }}

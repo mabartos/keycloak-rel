@@ -18,6 +18,12 @@ on:
       docker-org:
         description: "Docker Organization"
         value: ${{ jobs.env.outputs.docker-org }}
+      community-operators-repo:
+        description: "Community operators repository"
+        value: ${{ jobs.env.outputs.community-operators-repo }}
+      prod-operators-repo:
+        description: "Product operators repository"
+        value: ${{ jobs.env.outputs.prod-operators-repo }}
 
 defaults:
   run:
@@ -32,6 +38,8 @@ jobs:
       mvn-snapshots-url: ${{ steps.load-env.outputs.mvn-snapshots-url }}
       quay-org: ${{ steps.load-env.outputs.quay-org }}
       docker-org: ${{ steps.load-env.outputs.docker-org }}
+      community-operators-repo: ${{ steps.load-env.outputs.community-operators-repo }}
+      prod-operators-repo: ${{ steps.load-env.outputs.prod-operators-repo }}
     steps:
       - uses: actions/checkout@v3
       - id: load-env
