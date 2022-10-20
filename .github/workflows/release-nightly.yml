@@ -24,7 +24,7 @@ jobs:
     needs: [env]
     uses: ./.github/workflows/x-create-tags.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      gh-org: ${{ env.gh-org }}
       tag: nightly
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -34,7 +34,7 @@ jobs:
     needs: [env, create-tags]
     uses: ./.github/workflows/x-create-gh-releases.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      gh-org: ${{ env.gh-org }}
       tag: nightly
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -44,7 +44,7 @@ jobs:
     needs: [env, create-tags, create-gh-releases]
     uses: ./.github/workflows/x-keycloak-nodejs-admin.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      gh-org: ${{ env.gh-org }}
       tag: nightly
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -54,7 +54,7 @@ jobs:
     needs: [env, create-tags, keycloak-nodejs-admin]
     uses: ./.github/workflows/x-keycloak-admin-console.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      gh-org: ${{ env.gh-org }}
       version: 999-SNAPSHOT
       tag: nightly
     secrets:
@@ -69,8 +69,8 @@ jobs:
     needs: [env, create-tags, create-gh-releases, keycloak-admin-console]
     uses: ./.github/workflows/x-keycloak.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      mvn-url: ${{ needs.env.outputs.mvn-snapshots-url }}
+      gh-org: ${{ env.gh-org }}
+      mvn-url: ${{ env.mvn-snapshots-url }}
       version: 999-SNAPSHOT
       tag: nightly
     secrets:
@@ -85,9 +85,9 @@ jobs:
     needs: [env, create-tags, keycloak]
     uses: ./.github/workflows/x-keycloak-container.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      quay-org: ${{ needs.env.outputs.quay-org }}
-      docker-org: ${{ needs.env.outputs.docker-org }}
+      gh-org: ${{ env.gh-org }}
+      quay-org: ${{ env.quay-org }}
+      docker-org: ${{ env.docker-org }}
       version: 999-SNAPSHOT
       tag: nightly
     secrets:
@@ -102,10 +102,10 @@ jobs:
     needs: [env, create-tags,keycloak-container]
     uses: ./.github/workflows/x-keycloak-operator.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      quay-org: ${{ needs.env.outputs.quay-org }}
-      docker-org: ${{ needs.env.outputs.docker-org }}
-      mvn-url: ${{ needs.env.outputs.mvn-snapshots-url }}
+      gh-org: ${{ env.gh-org }}
+      quay-org: ${{ env.quay-org }}
+      docker-org: ${{ env.docker-org }}
+      mvn-url: ${{ env.mvn-snapshots-url }}
       version: 999-SNAPSHOT
       tag: nightly
     secrets:
@@ -122,7 +122,7 @@ jobs:
     needs: [env, create-tags, create-gh-releases]
     uses: ./.github/workflows/x-keycloak-documentation.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      gh-org: ${{ env.gh-org }}
       version: 999-SNAPSHOT
       tag: nightly
     secrets:
@@ -133,7 +133,7 @@ jobs:
     needs: [env, create-tags, keycloak]
     uses: ./.github/workflows/x-keycloak-quickstarts.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      gh-org: ${{ env.gh-org }}
       tag: nightly
       target-branch: nightly
     secrets:
@@ -144,7 +144,7 @@ jobs:
     needs: [env, keycloak, keycloak-documentation, keycloak-nodejs-admin, keycloak-admin-console]
     uses: ./.github/workflows/x-publish-gh-releases.yml
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      gh-org: ${{ env.gh-org }}
       tag: nightly
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}

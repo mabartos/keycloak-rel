@@ -24,7 +24,7 @@ jobs:
     uses: ./.github/workflows/x-keycloak-web.yml
     needs: [env]
     with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      gh-org: ${{ env.gh-org }}
       version: ${{ github.event.inputs.version }}
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
