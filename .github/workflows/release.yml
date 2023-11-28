@@ -4,8 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       branch:
+        description: 'Keycloak branch'
         required: true
       version:
+        description: 'New version'
+        required: true
+      previous-version:
+        description: 'Old version'
         required: true
 
 concurrency: rel-${{ github.ref }}
@@ -22,114 +27,27 @@ jobs:
       - run: |
           echo "Version: ${{ inputs.version }}  " >> $GITHUB_STEP_SUMMARY
           echo "Release branch: ${{ inputs.branch }}  " >> $GITHUB_STEP_SUMMARY
+          echo "Previous Keycloak version: ${{ inputs.previous-version }}  " >> $GITHUB_STEP_SUMMARY
           echo "Workflow branch: ${{ github.ref_name }}  " >> $GITHUB_STEP_SUMMARY
 
   env:
     uses: ./.github/workflows/x-env.yml
 
-  create-tags:
-    name: Create tags
-    needs: [env]
-    uses: ./.github/workflows/x-create-tags.yml
+  publish-keycloak-operator-hub:
+    name: Publish Keycloak Operator to OperatorHub
+    needs: [ env ]
+    uses: ./.github/workflows/x-keycloak-operator-hub-publish.yml
     with:
       gh-org: ${{ needs.env.outputs.gh-org }}
-      tag: ${{ github.event.inputs.version }}
-      branch: ${{ github.event.inputs.branch }}
-      set-versions: true
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  create-gh-releases:
-    name: Create Github releases
-    needs: [env, create-tags]
-    uses: ./.github/workflows/x-create-gh-releases.yml
-    with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      tag: ${{ github.event.inputs.version }}
-      prerelease: false
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  keycloak-nodejs-connect:
-    name: Keycloak Node.js Connect
-    needs: [env, create-tags, create-gh-releases]
-    uses: ./.github/workflows/x-keycloak-nodejs-connect.yml
-    with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      tag: ${{ github.event.inputs.version }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  keycloak:
-    name: Keycloak
-    needs: [env, create-tags, create-gh-releases]
-    uses: ./.github/workflows/x-keycloak.yml
-    with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
+      quay-org: ${{ needs.env.outputs.quay-org }}
       mvn-url: ${{ needs.env.outputs.mvn-releases-url }}
       version: ${{ github.event.inputs.version }}
-      tag: ${{ github.event.inputs.version }}
+      previous-version: ${{ github.event.inputs.previous-version }}
+      community-operators-org: ${{ needs.env.outputs.community-operators-org }}
+      prod-operators-org: ${{ needs.env.outputs.prod-operators-org }}
+      operatorhub-author-email: ${{ needs.env.outputs.operatorhub-author-email }}
+      operatorhub-author-name: ${{ needs.env.outputs.operatorhub-author-name }}
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       MVN_USERNAME: ${{ secrets.MVN_USERNAME }}
       MVN_TOKEN: ${{ secrets.MVN_TOKEN }}
-      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-
-  keycloak-container:
-    name: Keycloak Container
-    needs: [env, create-tags, keycloak]
-    uses: ./.github/workflows/x-keycloak-container.yml
-    with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      quay-org: ${{ needs.env.outputs.quay-org }}
-      docker-org: ${{ needs.env.outputs.docker-org }}
-      version: ${{ github.event.inputs.version }}
-      tag: ${{ github.event.inputs.version }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
-      QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-
-  keycloak-operator:
-    name: Keycloak Operator
-    needs: [env, create-tags,keycloak-container]
-    uses: ./.github/workflows/x-keycloak-operator.yml
-    with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      quay-org: ${{ needs.env.outputs.quay-org }}
-      docker-org: ${{ needs.env.outputs.docker-org }}
-      mvn-url: ${{ needs.env.outputs.mvn-releases-url }}
-      version: ${{ github.event.inputs.version }}
-      tag: ${{ github.event.inputs.version }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      MVN_USERNAME: ${{ secrets.MVN_USERNAME }}
-      MVN_TOKEN: ${{ secrets.MVN_TOKEN }}
-      QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
-      QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-
-  publish-gh-releases:
-    name: Publish releases
-    needs: [env, keycloak, keycloak-nodejs-connect]
-    uses: ./.github/workflows/x-publish-gh-releases.yml
-    with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      tag: ${{ github.event.inputs.version }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  publish-npm:
-    name: Publish NPM packages
-    needs: [env, keycloak, keycloak-nodejs-connect]
-    uses: ./.github/workflows/x-publish-npm.yml
-    with:
-      gh-org: ${{ needs.env.outputs.gh-org }}
-      tag: ${{ github.event.inputs.version }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

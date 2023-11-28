@@ -18,6 +18,18 @@ on:
       docker-org:
         description: "Docker Organization"
         value: ${{ jobs.env.outputs.docker-org }}
+      community-operators-org:
+        description: "Community operators organization name"
+        value: ${{ jobs.env.outputs.community-operators-org }}
+      prod-operators-org:
+        description: "Product operators organization name"
+        value: ${{ jobs.env.outputs.prod-operators-org }}
+      operatorhub-author-email:
+        description: "Author's EMAIL who sends PRs to operators repositories"
+        value: ${{ jobs.env.outputs.operatorhub-author-email }}
+      operatorhub-author-name:
+        description: "Author's NAME who sends PRs to operators repositories"
+        value: ${{ jobs.env.outputs.operatorhub-author-name }}
 
 defaults:
   run:
@@ -32,6 +44,10 @@ jobs:
       mvn-snapshots-url: ${{ env.mvn-snapshots-url }}
       quay-org: ${{ env.quay-org }}
       docker-org: ${{ env.docker-org }}
+      community-operators-org: ${{ env.community-operators-org }}
+      prod-operators-org: ${{ env.prod-operators-org }}
+      operatorhub-author-email: ${{ env.operatorhub-author-email }}
+      operatorhub-author-name: ${{ env.operatorhub-author-name }}
     steps:
       - uses: actions/checkout@v3
       - id: load-env
