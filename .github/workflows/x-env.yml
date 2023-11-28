@@ -15,9 +15,18 @@ on:
       quay-org:
         description: "Quay Organization"
         value: ${{ jobs.env.outputs.quay-org }}
+      operator-publish-repo-org:
+        description: "Target organization of fork for pushing necessary changes"
+        value: ${{ jobs.env.outputs.operator-publish-repo-org }}
       docker-org:
         description: "Docker Organization"
         value: ${{ jobs.env.outputs.docker-org }}
+      community-operators-repo:
+        description: "Community operators repository"
+        value: ${{ jobs.env.outputs.community-operators-repo }}
+      prod-operators-repo:
+        description: "Product operators repository"
+        value: ${{ jobs.env.outputs.prod-operators-repo }}
 
 defaults:
   run:
@@ -31,7 +40,10 @@ jobs:
       mvn-releases-url: ${{ env.mvn-releases-url }}
       mvn-snapshots-url: ${{ env.mvn-snapshots-url }}
       quay-org: ${{ env.quay-org }}
+      operator-publish-repo-org: ${{ env.operator-publish-repo-org }}
       docker-org: ${{ env.docker-org }}
+      community-operators-repo: ${{ env.community-operators-repo }}
+      prod-operators-repo: ${{ env.prod-operators-repo }}
     steps:
       - uses: actions/checkout@v3
       - id: load-env
