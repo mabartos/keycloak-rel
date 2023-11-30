@@ -40,13 +40,12 @@ jobs:
     with:
       gh-org: ${{ needs.env.outputs.gh-org }}
       quay-org: ${{ needs.env.outputs.quay-org }}
-      operator-publish-repo-org: ${{ needs.env.outputs.operator-publish-repo-org }}
       mvn-url: ${{ needs.env.outputs.mvn-releases-url }}
       version: ${{ github.event.inputs.version }}
       previous-version: ${{ github.event.inputs.previous-version }}
       community-operators-repo: ${{ needs.env.outputs.community-operators-repo }}
       prod-operators-repo: ${{ needs.env.outputs.prod-operators-repo }}
     secrets:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      KEYCLOAK_BOT_PAT: ${{ secrets.KEYCLOAK_BOT_PAT }}
       MVN_USERNAME: ${{ secrets.MVN_USERNAME }}
       MVN_TOKEN: ${{ secrets.MVN_TOKEN }}

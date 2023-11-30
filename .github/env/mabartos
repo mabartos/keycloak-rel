@@ -6,5 +6,5 @@ mvn-snapshots-url=https://maven.pkg.github.com/keycloak-rel-testing/maven
 quay-org=keycloaktesting
 docker-org=keycloaktesting
 
-community-operators-repo=https://github.com/mabartos-test/community-operators.git
-prod-operators-repo=https://github.com/mabartos-test/community-operators-prod.git
+community-operators-repo=https://github.com/mabartos/community-operators.git
+prod-operators-repo=https://github.com/mabartos/community-operators-prod.git
