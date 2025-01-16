@@ -124,7 +124,7 @@ jobs:
           
           echo "repository_name=${NAME["${{ matrix.type }}"]}" >> $GITHUB_ENV
           echo "repository_org=${ORG["${{ matrix.type }}"]}" >> $GITHUB_ENV
-          echo "repository_url=https://github.com/${{ env.repository_org }}/${{ env.repository_name }}.git" >> $GITHUB_ENV
+          echo "repository_url=https://github.com/${ORG["${{ matrix.type }}"]}/${NAME["${{ matrix.type }}"]}.git" >> $GITHUB_ENV
           
           declare -A BRANCH_PREFIX
           BRANCH_PREFIX["keycloak-rel-testing"]="testing"
@@ -137,7 +137,7 @@ jobs:
         with:
           repository: ${{ env.repository_org }}/${{ env.repository_name }}
           path: community-operators
-          token: ${{ secrets.GH_TOKEN }}
+          #token: ${{ secrets.GH_TOKEN }}
 
       - name: Push changes to particular Community operators fork
         working-directory: community-operators
